@@ -36,7 +36,7 @@ further scaled to the actual plotter size using IP and SC HPGL instructions.
         tile-width 20
         tile-height 20
         origin [0 0]
-        grid (make-grid tile-width tile-height width height origin)]
+        grid (make-grid origin width height tile-width tile-height)]
     {:grid grid
      :x-start (random 10)
      :y-start (random 10)}))
