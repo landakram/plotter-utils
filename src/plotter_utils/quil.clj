@@ -36,3 +36,18 @@
                  (q/scale scale-val scale-val)
                  (f))
     (spit outfile (strip-init-instruction (slurp outfile)))))
+
+(defn record-many
+  "Given a seq of quil `states`, call `f` repeatedly with each state,
+  recording each call into HPGL instructions. HPGL instructions are
+  outputted as separate files using the optional parameter `out` as
+  a template. `f` should accept two arguments: `state`, the current
+  iteration of `states`, and `out`, the path to the current to-be-written
+  outfile."
+  [states w h f & {:keys [out] :or {out "generated/out-####.hpgl"}}]
+  (seq
+   (map-indexed
+    (fn [idx state]
+      (let [out (clojure.string/replace out "####" (str idx))]
+        (do-record w h out #(f state out))))
+    states)))

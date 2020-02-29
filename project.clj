@@ -1,4 +1,4 @@
-(defproject plotter-utils "0.1.0"
+(defproject plotter-utils "0.1.1"
   :description "Utilties for working with HPGL plotters and quil."
   :url "https://github.com/landakram/plotter-utils"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
