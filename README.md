@@ -1,5 +1,7 @@
 # plotter-utils
 
+[![Clojars Project](https://img.shields.io/clojars/v/plotter-utils.svg)](https://clojars.org/plotter-utils)
+
 Utilties for working with HPGL plotters and quil.
 
 ## Usage
