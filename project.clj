@@ -7,4 +7,5 @@
                  [quil "3.1.0"]]
   :source-paths ["src"]
   :java-source-paths ["src/java"]
+  :javac-options ["-target" "1.8" "-source" "1.8"]
   :repl-options {:init-ns plotter-utils.quil})

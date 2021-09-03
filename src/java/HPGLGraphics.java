@@ -17,7 +17,6 @@ import processing.core.*;
  */
 
 public class HPGLGraphics extends PGraphics {
-
   File file;
   PrintWriter writer;
   public static final String HPGL = "hpglgraphics.HPGLGraphics";
@@ -27,22 +26,13 @@ public class HPGLGraphics extends PGraphics {
   private PMatrix2D transformMatrix;
 
   private boolean matricesAllocated = false;
+  private boolean shouldFloor = false;
   
-  private String size;  // paper size, A3 or A4 for now
   private int MATRIX_STACK_DEPTH = 32;
   private int transformCount = 0;
   private PMatrix2D transformStack[] = new PMatrix2D[MATRIX_STACK_DEPTH];
   
   private double chordangle = 5.0; // HPGL default is 5 degrees
-  private int A4W = 11040;
-  private int A4H =  7721;
-  private int A3W = 16158;
-  private int A3H = 11040;
-  
-  private int A4Wmm = 297;
-  private int A4Hmm = 210;
-  private int A3Wmm = 420;
-  private int A3Hmm = 297;
       
   private char terminator = (char)3; // Label/text terminator;
   
@@ -58,13 +48,8 @@ public class HPGLGraphics extends PGraphics {
    * @example simple_demo
    * 
    */
-
-  public HPGLGraphics(){
+  public HPGLGraphics() {
     super();
-    welcome();
-    
-    //    this.path = parent.sketchPath("output.hpgl");
-    //    file = new File(this.path);
     
     if (!matricesAllocated) {   
       // Init default matrix
@@ -72,26 +57,16 @@ public class HPGLGraphics extends PGraphics {
       matricesAllocated = true;
     }
   }
-  
-  private void welcome() {
-    System.out.println("##library.name## ##library.prettyVersion## by ##author##");
+
+  public HPGLGraphics useFloor() {
+    this.shouldFloor = true;
+    return this;
   }
-    
-  /**
-   * This method sets the plotter output size. Used to scale the Processing sketch to
-   * match either A3 or A4 dimensions (only these supported now)
-   * 
-   * @example simple_demo
-   * @param size String: "A3" or "A4", depending on the intended plot size
-   */
+  
   public void setCurveDetail(int d) {
     curveDetail = d;
   }
-  
-  public void setPaperSize(String size) {
-    this.size=size;
-  }
-  
+
   /**
    * This method sets the path and filename for the HPGL output.
    * Must be called from the Processing sketch
@@ -100,7 +75,6 @@ public class HPGLGraphics extends PGraphics {
    * @param path String: name of file to save to
    */
   public void setPath(String path) {
-    
     this.path = parent.sketchPath(path);
     if (path != null) {
       file = new File(this.path);
@@ -141,17 +115,11 @@ public class HPGLGraphics extends PGraphics {
   }
   
   public void beginDraw() {
-           
     if (this.path == null) {
       //throw new RuntimeException("call setPath() before recording begins!");
       System.out.println("here1");
       this.path = parent.sketchPath("output.hpgl");
       file = new File(this.path);
-    }
-        
-    if (this.size == null) {
-      this.size="A4";
-      System.out.println("setPaperSize undefined: defaulting to A4");
     }
         
     if (writer == null) {
@@ -389,39 +357,12 @@ public class HPGLGraphics extends PGraphics {
    * 
    */
   private double[] scaleToPaper(double[] xy) {
-    
-    double[] xy1 =  new double[xy.length];
-    
-    double W=0.0;
-    double H=0.0;
-    
-    if (this.size == "A3") {
-      W=A3W; H=A3H;
-    } else if (this.size == "A4"){
-      W=A4W; H=A4H;
-    }
-
-    // Assume width>height, i.e. always plotting in landscape orientation
-    double ratio = H/this.height;
-    xy1[0] = ratio * xy[0];
-    xy1[1] = ratio * xy[1];
-    
-    return xy1;
-    
+    return xy;
   }
 
   private double[] scaleXY(float x, float y){
     float[] xy = new float[2];
     double[] ret = new double[2];
-          
-    double W=0.0;
-    double H=0.0;
-            
-    if (this.size == "A3") {
-      W=A3W; H=A3H;
-    } else if (this.size == "A4"){
-      W=A4W; H=A4H;
-    }
           
     this.transformMatrix.mult(new float[]{x,y}, xy);
           
@@ -430,14 +371,24 @@ public class HPGLGraphics extends PGraphics {
     }
           
     ret = scaleToPaper(ret);
-    ret[1] = H-ret[1];
+    ret[1] = this.height - ret[1];
+
+    if (shouldFloor) {
+      ret[0] = Math.floor(ret[0]);
+      ret[1] = Math.floor(ret[1]);
+    }
            
     return ret;
   }
 
   private double[] scaleWH(double w, double h){
     double[] wh = {w,h};
-    wh = scaleToPaper(wh);
+
+    if (shouldFloor) {
+      wh[0] = Math.floor(wh[0]);
+      wh[1] = Math.floor(wh[1]);
+    }
+
     return wh;
   }
   
@@ -652,18 +603,6 @@ public class HPGLGraphics extends PGraphics {
     double paperWidth=1.0;
     double paperHeight=1.0;
     
-    if (this.size == "A3") {
-      //sizecm_w=0.29;
-      //sizecm_h=0.38;
-      paperWidth=A3Wmm;
-      paperHeight=A3Hmm;
-    } else if (this.size == "A4"){
-      //sizecm_w=0.19;
-      //sizecm_h=0.27;
-      paperWidth=A4Wmm;
-      paperHeight=A4Hmm;
-    }
-    
     //sizecm_w = (sizepx*paperWidth)/this.width/10;
     //sizecm_h = sizecm_w*(0.27/0.19);
     
@@ -686,8 +625,6 @@ public class HPGLGraphics extends PGraphics {
   }
 
   public void popMatrix() {
-    //System.out.println("popMatrix");
-
     if (transformCount == 0) {   
       throw new RuntimeException("HPGL: matrix stack underrun");
     }
@@ -699,20 +636,15 @@ public class HPGLGraphics extends PGraphics {
   }
 
   public void translate(float x, float y) {
-    // PenUp, move by x, y.
-    //this.modelView.print();
     this.transformMatrix.translate(x, y);
-    //this.modelView.print();
   }
   
 
   public void scale(float s) {
-    //System.out.print("hereA");
     this.transformMatrix.scale(s,s);
   }
   
   public void scale(float x, float y) {
-    System.out.print("here1");
     this.transformMatrix.scale(x,y);    
   }
   

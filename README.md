@@ -10,8 +10,8 @@ Utilties for working with HPGL plotters and quil.
 instructions that are centered and scaled.
 
 `do-record` can be used to record quil sketches as HPGL instructions. Sketches
-are scaled preserving aspect ratio to a plotter size of 11040x7721. This can be
-further scaled to the actual plotter size using IP and SC HPGL instructions.
+are not scaled, so the units in the outputted HPGL file are those used by quil. These can be
+further scaled to the actual paper size using IP and SC HPGL instructions.
 
 ```clj
 (defn draw-state [{:keys [x1 y1 x2 y2] :as state}]
